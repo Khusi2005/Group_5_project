@@ -25,9 +25,9 @@ create trigger update_stock_after_sale
 after insert on Sales  
 for each row  
 begin  
-update Product  
-set Stock=Stock-new.QuantitySold  
-where ProductID=new.ProductID;  
+	update Product  
+	set Stock=Stock-new.QuantitySold  
+	where ProductID=new.ProductID;  
 end$$  
 delimiter ; 
 
@@ -48,9 +48,20 @@ WHERE SaleDate >= CURDATE() - INTERVAL 7 DAY;
 
 -- 7. Remove a discontinued product from the inventory 
 
-SELECT * 
-FROM Product 
-WHERE SupplierID NOT IN (SELECT SupplierID FROM Suppliers);
+ delimiter $$
+ create trigger after_supplier_delete
+ before delete on Suppliers
+ for each row
+ begin
+	 delete from Sales
+	 where ProductID in(
+	 select ProductID from Product where SupplierID=old.SupplierID);
+	 delete from Product
+	 where SupplierID=old.SupplierID;
+ end $$
+ delimiter ;
+ delete from Suppliers
+ where SupplierID=107;
 
 -- 8. Retrieve products with the highest revenue. 
 
